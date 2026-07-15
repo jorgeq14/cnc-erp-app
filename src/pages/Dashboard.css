@@ -36,7 +36,24 @@
   transition: var(--transition);
 }
 
-.stat-card:hover .stat-icon {
+  .btn-secondary {
+    background: linear-gradient(135deg, rgba(59,130,246,0.8), rgba(99,102,241,0.8));
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
   transform: scale(1.1) rotate(5deg);
 }
 

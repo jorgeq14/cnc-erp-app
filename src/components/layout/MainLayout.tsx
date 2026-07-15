@@ -8,7 +8,7 @@ import { NotificationBell } from '../ui/NotificationBell';
 import './MainLayout.css';
 
 const pageTitles: Record<string, string> = {
-  '/dashboard':     'PPanel de Controll',
+  '/dashboard':     'Panel de Control',
   '/proformas':     'Proformas y Cotizaciones',
   '/agenda':        'Agenda de Visitas',
   '/servicios':     'Servicios e Historial',

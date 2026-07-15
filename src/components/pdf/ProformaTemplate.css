@@ -1,0 +1,199 @@
+.pdf-container {
+  width: 210mm;
+  padding: 12mm 15mm;
+  background-color: white;
+  color: #333333;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+
+.pdf-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 2px solid #ff8000;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.pdf-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.pdf-logo {
+  font-size: 40px;
+  font-weight: 900;
+  color: #ff8000;
+  font-style: italic;
+  letter-spacing: -2px;
+}
+
+.pdf-company-info h1 {
+  margin: 0 0 5px 0;
+  font-size: 24px;
+  color: #111;
+}
+
+.pdf-company-info p {
+  margin: 2px 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.pdf-quote-info {
+  text-align: right;
+}
+
+.pdf-quote-info h2 {
+  color: #ff8000;
+  margin: 0 0 5px 0;
+  font-size: 28px;
+}
+
+.pdf-quote-info p {
+  margin: 2px 0;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.pdf-customer-section {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #ff8000;
+}
+
+.pdf-customer-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  color: #111;
+}
+
+.pdf-customer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.pdf-customer-grid p {
+  margin: 0;
+}
+
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.pdf-table th {
+  background-color: #ff8000;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.pdf-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 12px;
+}
+
+.pdf-table th:last-child,
+.pdf-table td:last-child {
+  text-align: right;
+}
+
+.pdf-table th:nth-child(3),
+.pdf-table td:nth-child(3) {
+  text-align: center;
+}
+
+.pdf-totals-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.pdf-terms {
+  width: 50%;
+  font-size: 11px;
+  color: #444;
+}
+
+.pdf-terms h4 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #111;
+}
+
+.pdf-terms p {
+  margin: 4px 0;
+}
+
+.pdf-totals-box {
+  width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pdf-totals-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid #eee;
+}
+
+.pdf-totals-row.total {
+  background-color: #ff8000;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border-bottom: none;
+}
+
+.pdf-bank-info {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #fff9f2;
+  border-radius: 8px;
+  border: 1px solid #ffe0b2;
+  border-left: 4px solid #ff8000;
+  font-size: 12px;
+  color: #333;
+}
+
+.pdf-bank-info h4 {
+  margin: 0 0 8px 0;
+  color: #ff8000;
+  font-size: 14px;
+}
+
+.pdf-bank-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pdf-bank-item p {
+  margin: 2px 0;
+}
+
+.pdf-footer {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+}
+
+.pdf-footer p {
+  margin: 4px 0;
+}

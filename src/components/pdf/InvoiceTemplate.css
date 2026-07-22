@@ -1,0 +1,227 @@
+.pdf-invoice-container {
+  width: 210mm;
+  padding: 12mm 15mm;
+  background-color: white;
+  color: #333333;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.pdf-invoice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  border-bottom: 2px solid #ff8000;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.pdf-invoice-logo-side {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.pdf-invoice-company-details h1 {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  color: #111;
+  font-weight: 800;
+}
+
+.pdf-invoice-company-details p {
+  margin: 2px 0;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.3;
+}
+
+.pdf-invoice-ruc-box {
+  border: 2px solid #ff8000;
+  border-radius: 8px;
+  width: 240px;
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #fffaf5;
+}
+
+.pdf-invoice-ruc-box h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.pdf-invoice-ruc-box h2 {
+  margin: 5px 0 0 0;
+  font-size: 20px;
+  color: #ff8000;
+  font-weight: 800;
+}
+
+.pdf-invoice-doc-title {
+  background-color: #ff8000;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 4px 8px;
+  margin: 4px -14px;
+  text-transform: uppercase;
+}
+
+.pdf-invoice-client-section {
+  margin-bottom: 18px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px 15px;
+  background-color: #fafafa;
+}
+
+.pdf-invoice-client-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.pdf-invoice-client-table td {
+  padding: 5px 8px;
+  vertical-align: top;
+}
+
+.pdf-invoice-client-table td:nth-child(odd) {
+  color: #666;
+  width: 15%;
+}
+
+.pdf-invoice-client-table td:nth-child(even) {
+  color: #111;
+  width: 35%;
+}
+
+.pdf-invoice-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 25px;
+}
+
+.pdf-invoice-items-table th {
+  background-color: #333;
+  color: white;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #333;
+}
+
+.pdf-invoice-items-table td {
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  font-size: 11px;
+  vertical-align: middle;
+}
+
+.pdf-invoice-items-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.pdf-invoice-totals-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  gap: 20px;
+}
+
+.pdf-invoice-qr-legal {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex: 1;
+}
+
+.pdf-invoice-qr {
+  width: 90px;
+  height: 90px;
+  border: 1px solid #ddd;
+  padding: 4px;
+  background: white;
+}
+
+.pdf-invoice-legal-text {
+  font-size: 10px;
+  color: #777;
+  line-height: 1.4;
+}
+
+.pdf-invoice-legal-text p {
+  margin: 2px 0;
+}
+
+.pdf-invoice-totals-box {
+  width: 250px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.pdf-invoice-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.pdf-invoice-total-row.final-total {
+  background-color: #ff8000;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  border-bottom: none;
+}
+
+.pdf-invoice-bank-details {
+  margin-top: 15px;
+  padding: 12px 15px;
+  background-color: #fff9f2;
+  border: 1px solid #ffe0b2;
+  border-left: 4px solid #ff8000;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.pdf-invoice-bank-details h4 {
+  margin: 0 0 8px 0;
+  color: #ff8000;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.pdf-invoice-bank-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pdf-invoice-bank-grid p {
+  margin: 3px 0;
+}
+
+.pdf-invoice-footer {
+  margin-top: 25px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 10px;
+  color: #888;
+  text-align: center;
+}
+
+.pdf-invoice-footer p {
+  margin: 2px 0;
+}

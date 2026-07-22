@@ -5,6 +5,9 @@ import { Search, Plus, FileText, Trash2, CheckCircle, AlertCircle, Check, Messag
 import { supabase } from '../lib/supabase';
 import { Modal } from '../components/ui/Modal';
 import { ProformaTemplate } from '../components/pdf/ProformaTemplate';
+import { InvoiceTemplate } from '../components/pdf/InvoiceTemplate';
+import { sunatService } from '../lib/sunat';
+import { getCurrentUser } from '../lib/auth';
 import html2pdf from 'html2pdf.js';
 import { logActivity } from '../lib/logger';
 
@@ -39,6 +42,11 @@ const Quotes = () => {
   const [pdfCustomer, setPdfCustomer] = useState<any>(null);
   const [appConfig, setAppConfig] = useState<any>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
+
+  // Invoice Generation State
+  const [invoicePdfVenta, setInvoicePdfVenta] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState('Transferencia');
+  const invoicePdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchData();
@@ -272,28 +280,36 @@ const Quotes = () => {
   const { subtotal, tax, total } = calculateTotals();
   const currentSymbol = currency === 'USD' ? '$' : 'S/';
 
-  const [confirmModal, setConfirmModal] = useState<{ id: number, num: string, hasProducts: boolean } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{ id: number, num: string, hasProducts: boolean, quote: any } | null>(null);
   const [successModal, setSuccessModal] = useState<{ ventaId: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
   const handleApprove = async () => {
     if (!confirmModal) return;
-    const { id } = confirmModal;
+    const { id, quote } = confirmModal;
     setConfirmModal(null);
     setLoading(true);
 
     try {
-      const quote = quotes.find(q => q.id === id);
       if (!quote) throw new Error("Proforma no encontrada");
 
-      // 1. Crear Venta
-      const { error: ventaError } = await supabase.from('ventas_realizadas').insert([{
-        total: quote.total,
-        date: new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' })).toISOString().split('T')[0],
-        customer_id: (quote as any).customer_id || (quote.customers as any)?.id,
-        quote_id: quote.id,
-        estado_seguimiento: 'pendiente_entrega'
-      }]);
+      // 1. Crear Venta pagada y facturada directamente
+      const { data: saleData, error: ventaError } = await supabase
+        .from('ventas_realizadas')
+        .insert([{
+          total: quote.total,
+          date: new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' })).toISOString().split('T')[0],
+          customer_id: quote.customer_id || quote.customers?.id,
+          quote_id: quote.id,
+          estado_seguimiento: 'pagado_facturado',
+          monto_pagado: quote.total,
+          fecha_pago: new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Lima' })).toISOString().split('T')[0],
+          metodo_pago: paymentMethod,
+          seller_name: getCurrentUser()?.name || 'Administrador'
+        }])
+        .select('*, customers(*), quotes(*)')
+        .single();
+
       if (ventaError) throw ventaError;
 
       // 2. Descontar Inventario y Movimientos
@@ -313,33 +329,85 @@ const Quotes = () => {
         }
       }
 
-      // 3. Actualizar estado
-      const { error: updateError } = await supabase.from('quotes').update({ status: 'Aprobada' }).eq('id', id);
-      if (updateError) throw updateError;
+      // 3. Enviar a SUNAT (API Demo/Real)
+      const resSunat: any = await sunatService.enviarComprobante(saleData, quote.items);
+      if (!resSunat.success) {
+        throw new Error('Error SUNAT: ' + resSunat.mensaje);
+      }
 
-      // Redirigir directamente al Kanban de Ventas
-      setTimeout(() => {
-        navigate('/ventas');
-      }, 1500); // Pequeña pausa para que el usuario vea el mensaje de éxito
-      // Actualizar lista local
-      setQuotes(quotes.map(q => q.id === id ? { ...q, status: 'Aprobada' } : q));
-      await logActivity('PROFORMA_EDITADA', `Proforma ${confirmModal.num} aprobada y convertida en venta.`);
+      // 4. Generar PDF localmente y subirlo a Supabase Storage
+      setInvoicePdfVenta(saleData);
+
+      setTimeout(async () => {
+        if (invoicePdfRef.current) {
+          const isFact = quote.customers?.ruc && quote.customers.ruc.length === 11;
+          const prefix = isFact ? 'F001' : 'B001';
+          const docNum = `${prefix}-${saleData.id.toString().padStart(6, '0')}`;
+          const fileName = `factura_${docNum}_${Date.now()}.pdf`;
+
+          const opt = {
+            margin:       0,
+            filename:     fileName,
+            image:        { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+            pagebreak:    { mode: 'avoid-all' }
+          };
+
+          const worker = html2pdf().set(opt).from(invoicePdfRef.current);
+          const pdfBlob = await worker.output('blob');
+
+          const { error: uploadError } = await supabase.storage
+            .from('facturas')
+            .upload(fileName, pdfBlob);
+
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage
+              .from('facturas')
+              .getPublicUrl(fileName);
+
+            // Actualizar venta con factura_url
+            await supabase
+              .from('ventas_realizadas')
+              .update({ factura_url: urlData.publicUrl })
+              .eq('id', saleData.id);
+
+            // 5. Actualizar estado de proforma a 'Facturada'
+            await supabase.from('quotes').update({ status: 'Facturada' }).eq('id', id);
+
+            await logActivity('PROFORMA_EDITADA', `Proforma ${quote.quote_number} convertida directamente a Factura.`);
+            alert(`Comprobante ${docNum} emitido y enviado a SUNAT con éxito.`);
+          } else {
+            console.error('Error al subir PDF:', uploadError);
+            await supabase.from('quotes').update({ status: 'Aprobada' }).eq('id', id);
+            alert('Se emitió el comprobante, pero hubo un error guardando el PDF.');
+          }
+
+          setInvoicePdfVenta(null);
+          setQuotes(quotes.map(q => q.id === id ? { ...q, status: 'Facturada' } : q));
+          navigate('/facturas');
+        }
+      }, 1000);
+
     } catch (err: any) {
-      console.error('Error al aprobar proforma:', err);
-      setErrorMsg(err?.message || 'No se pudo aprobar la proforma. Verifique el stock.');
+      console.error('Error al facturar proforma:', err);
+      setErrorMsg(err?.message || 'No se pudo facturar la proforma.');
     } finally {
       setLoading(false);
     }
   };
 
   const updateStatus = async (id: number, newStatus: string) => {
-    if (newStatus === 'Aprobada') {
+    if (newStatus === 'Aprobada' || newStatus === 'Facturada') {
       const quote = quotes.find(q => q.id === id);
+      if (quote?.status === 'Facturada') {
+        alert('Esta proforma ya ha sido facturada.');
+        return;
+      }
       const quoteItems = quote?.items || [];
-      // Detectar si hay productos (ya sea por el nuevo campo 'type' o por 'SKU' en la descripción)
       const hasProducts = quoteItems.some((it: any) => it.type === 'producto' || it.description?.includes('SKU:'));
       
-      setConfirmModal({ id, num: quote?.quote_number || `#${id}`, hasProducts });
+      setConfirmModal({ id, num: quote?.quote_number || `#${id}`, hasProducts, quote });
       return;
     }
 
@@ -529,6 +597,12 @@ const Quotes = () => {
         ref={pdfRef} 
         quote={pdfQuote} 
         customer={pdfCustomer} 
+        config={appConfig}
+      />
+
+      <InvoiceTemplate 
+        ref={invoicePdfRef} 
+        venta={invoicePdfVenta} 
         config={appConfig}
       />
 
@@ -738,24 +812,51 @@ const Quotes = () => {
       <Modal 
         isOpen={!!confirmModal} 
         onClose={() => setConfirmModal(null)} 
-        title={confirmModal?.hasProducts ? "📦 Confirmar Venta y Stock" : "🛠️ Confirmar Venta de Servicio"}
+        title="Emitir Comprobante de Pago (SUNAT)"
       >
         <div style={{ padding: '1rem' }}>
-          {confirmModal?.hasProducts ? (
-            <p style={{ marginBottom: '1.5rem', color: 'var(--color-text-muted)', lineHeight: '1.5' }}>
-              Se procederá a aprobar la proforma <strong>{confirmModal?.num}</strong>.<br /><br />
-              Esta proforma contiene productos, por lo que se <strong>descontará automáticamente el stock</strong> del inventario y se creará el registro de venta.
-            </p>
-          ) : (
-            <p style={{ marginBottom: '1.5rem', color: 'var(--color-text-muted)', lineHeight: '1.5' }}>
-              Se procederá a aprobar la proforma de servicio <strong>{confirmModal?.num}</strong>.<br /><br />
-              Esta proforma pasará directamente al módulo de Ventas para su seguimiento y gestión de entrega.
-            </p>
-          )}
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          {confirmModal && (() => {
+            const isFact = confirmModal.quote?.customers?.ruc && confirmModal.quote.customers.ruc.length === 11;
+            return (
+              <div>
+                <p style={{ marginBottom: '1.25rem', color: 'var(--color-text-muted)', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                  Se procederá a facturar la proforma <strong>{confirmModal.num}</strong>. Se emitirá el comprobante oficial y se registrará la venta.
+                </p>
+
+                <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '1.5rem' }}>
+                  <p style={{ margin: '4px 0', fontSize: '0.85rem' }}><strong>Cliente:</strong> {confirmModal.quote?.customers?.name}</p>
+                  <p style={{ margin: '4px 0', fontSize: '0.85rem' }}><strong>Documento:</strong> {confirmModal.quote?.customers?.ruc || confirmModal.quote?.customers?.dni || 'No Registrado'}</p>
+                  <p style={{ margin: '4px 0', fontSize: '0.85rem' }}><strong>Tipo Comprobante:</strong> <span style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>{isFact ? 'FACTURA ELECTRÓNICA (F001)' : 'BOLETA ELECTRÓNICA (B001)'}</span></p>
+                  <p style={{ margin: '4px 0', fontSize: '0.85rem' }}><strong>Monto Total:</strong> <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>{confirmModal.quote?.currency === 'USD' ? '$' : 'S/'} {Number(confirmModal.quote?.total).toFixed(2)}</span></p>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 'bold', display: 'block', marginBottom: '0.5rem' }}>Método de Pago</label>
+                  <select 
+                    className="form-control" 
+                    value={paymentMethod}
+                    onChange={e => setPaymentMethod(e.target.value)}
+                    style={{ width: '100%', fontSize: '0.9rem' }}
+                  >
+                    <option value="Transferencia">Transferencia Bancaria</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Yape/Plin">Yape / Plin</option>
+                  </select>
+                </div>
+
+                {confirmModal.hasProducts && (
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '1.5rem' }}>
+                    <AlertCircle size={14} /> Nota: Esta proforma contiene productos, se descontará automáticamente el stock del inventario.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
             <button className="btn-secondary" onClick={() => setConfirmModal(null)}>Cancelar</button>
             <button className="btn-primary" onClick={handleApprove}>
-              {confirmModal?.hasProducts ? "Confirmar y Descontar Stock" : "Confirmar Venta"}
+              Emitir y Enviar a SUNAT
             </button>
           </div>
         </div>

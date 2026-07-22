@@ -15,6 +15,7 @@ const Services = lazy(() => import('./pages/Services'));
 const Config = lazy(() => import('./pages/Config'));
 const WorkOrders = lazy(() => import('./pages/WorkOrders'));
 const Sales = lazy(() => import('./pages/Sales'));
+const Invoices = lazy(() => import('./pages/Invoices'));
 const Reports = lazy(() => import('./pages/Reports'));
 
 // Pantalla de carga mientras se descargan los módulos
@@ -58,6 +59,7 @@ function App() {
             <Route path="clientes/:id"  element={<CustomerProfile />} />
             <Route path="reportes"      element={<Reports />} />
             <Route path="ventas"        element={<Sales />} />
+            <Route path="facturas"      element={<Invoices />} />
             <Route path="ordenes-trabajo" element={<WorkOrders />} />
             <Route path="configuracion" element={<Config />} />
           </Route>

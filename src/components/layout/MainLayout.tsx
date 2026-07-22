@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, Settings, Calendar, Wrench, FileText, BarChart2, LogOut, Menu, ClipboardList, Search, DollarSign } from 'lucide-react';
+import { LayoutDashboard, Users, Package, Settings, Calendar, Wrench, FileText, BarChart2, LogOut, Menu, ClipboardList, Search, DollarSign, Receipt } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getCurrentUser, logout } from '../../lib/auth';
 import { logActivity } from '../../lib/logger';
@@ -15,6 +15,7 @@ const pageTitles: Record<string, string> = {
   '/inventario':    'Inventario y Productos',
   '/clientes':      'Directorio de Clientes',
   '/ventas':        'Seguimiento de Ventas',
+  '/facturas':      'Facturación Electrónica',
   '/reportes':      'Reportes de Actividad',
   '/ordenes-trabajo': 'Órdenes de Trabajo',
   '/configuracion': 'Configuración',
@@ -75,6 +76,7 @@ const MainLayout = ({ onLogout }: MainLayoutProps) => {
           <NavLink to="/servicios"     className={({isActive}) => isActive ? "nav-item active" : "nav-item"}><Wrench size={20} /> Servicios</NavLink>
           <NavLink to="/inventario"    className={({isActive}) => isActive ? "nav-item active" : "nav-item"}><Package size={20} /> Inventario</NavLink>
           <NavLink to="/ventas"        className={({isActive}) => isActive ? "nav-item active" : "nav-item"}><DollarSign size={20} /> Ventas</NavLink>
+          <NavLink to="/facturas"      className={({isActive}) => isActive ? "nav-item active" : "nav-item"}><Receipt size={20} /> Facturas</NavLink>
           <NavLink to="/clientes"      className={({isActive}) => isActive ? "nav-item active" : "nav-item"}><Users size={20} /> Clientes</NavLink>
           <NavLink to="/reportes"      className={({isActive}) => isActive ? "nav-item active" : "nav-item"}><BarChart2 size={20} /> Reportes</NavLink>
           <NavLink to="/ordenes-trabajo" className={({isActive}) => isActive ? "nav-item active" : "nav-item"}><ClipboardList size={20} /> Órdenes</NavLink>

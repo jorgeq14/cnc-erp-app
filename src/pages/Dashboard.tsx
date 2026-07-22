@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Calendar, Wrench, FileText, AlertTriangle, Clock, ChevronRight, BarChart2, CheckCircle, AlertCircle, Download } from 'lucide-react';
+import { Users, Calendar, Wrench, FileText, AlertTriangle, Clock, ChevronRight, BarChart2, CheckCircle, AlertCircle } from 'lucide-react';
 import './Dashboard.css';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -21,56 +21,7 @@ const Dashboard = () => {
   const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
 
-  // Export to Excel function (lazy loads xlsx)
-  const exportToExcel = async () => {
-    const XLSX = await import('xlsx');
-    try {
-      const { data: inventory } = await supabase.from('inventory').select('*');
-      const wb = XLSX.utils.book_new();
 
-      // Full stock sheet
-      const stockData = (inventory ?? []).map(item => ({
-        SKU: item.sku,
-        Nombre: item.name,
-        Categoría: item.category,
-        Stock: item.stock,
-        "Stock Mínimo": item.min_stock,
-        Precio: item.price,
-        Moneda: item.currency,
-      }));
-      const wsStock = XLSX.utils.json_to_sheet(stockData);
-      XLSX.utils.book_append_sheet(wb, wsStock, 'Stock');
-
-      // Low stock sheet with red fill
-      const lowStockItems = (inventory ?? []).filter(i => i.stock <= i.min_stock);
-      const lowData = lowStockItems.map(item => ({
-        SKU: item.sku,
-        Nombre: item.name,
-        Categoría: item.category,
-        Stock: item.stock,
-        "Stock Mínimo": item.min_stock,
-        Precio: item.price,
-        Moneda: item.currency,
-      }));
-      const wsLow = XLSX.utils.json_to_sheet(lowData);
-      // Apply red fill to low stock sheet rows
-      const range = XLSX.utils.decode_range(wsLow['!ref'] || 'A1');
-      for (let R = range.s.r; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-          const cell_address = { c: C, r: R };
-          const cell_ref = XLSX.utils.encode_cell(cell_address);
-          if (!wsLow[cell_ref]) continue;
-          wsLow[cell_ref].s = { fill: { fgColor: { rgb: 'FFCCCC' } } };
-        }
-      }
-      XLSX.utils.book_append_sheet(wb, wsLow, 'Stock_Bajo');
-
-      // Write the workbook to file
-      XLSX.writeFile(wb, 'inventario.xlsx');
-    } catch (err) {
-      console.error('Error exporting inventory to Excel', err);
-    }
-  };
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
